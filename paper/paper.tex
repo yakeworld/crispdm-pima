@@ -99,7 +99,7 @@ Diabetes Mellitus (DM) is a severe chronic metabolic disorder characterized by p
 
 \subsection{Establishing a Niche (Move 2a --- The Paradox and Root Causes)}
 
-Despite the widespread utilization of the PIDD, the current literature exhibits a severe ``high-metric, low-credibility'' paradox~\cite{Wen2024Leakage}. An increasing number of recent studies report near-perfect classification performance, with accuracy metrics frequently exceeding 95\%~\cite{Chinnababu2024} or even 99\%~\cite{Akbar2023}. However, when subjected to rigorous methodological audits, these models universally fail to demonstrate real-world clinical viability. This study posits that such extraordinarily high metrics are not the result of algorithmic breakthroughs, but rather statistical artifacts masking three pervasive methodological flaws.
+Despite the widespread utilization of the PIDD, the current literature exhibits a severe ``high-metric, low-credibility'' paradox~\cite{Wen2024Leakage}. An increasing number of recent studies report near-perfect classification performance, with accuracy metrics frequently exceeding 95\%~\cite{Mehta2024} or even 99\%~\cite{Akbar2023}. However, when subjected to rigorous methodological audits, these models universally fail to demonstrate real-world clinical viability. This study posits that such extraordinarily high metrics are not the result of algorithmic breakthroughs, but rather statistical artifacts masking three pervasive methodological flaws.
 
 \textbf{First}, the dataset suffers from the improper handling of ``biologically implausible'' zero values~\cite{KaggleZeroValues}. Key physiological indicators in the PIDD, such as Insulin (which has a 48.7\% missing rate), Skin Thickness, Blood Pressure, Glucose, and BMI, contain massive zero values that represent missing clinical records, yet these are frequently treated mechanically as valid numerical features~\cite{Kapoor2024Leakage}.
 
@@ -135,7 +135,7 @@ To contextualize the necessity of our framework, Table~\ref{tab:comparison} cont
 \textbf{Study} & \textbf{Claimed Accuracy} & \textbf{Leakage Prevention} & \textbf{Process Framework} & \textbf{XAI} \\
 \midrule
 Kurniawan et al.~\cite{Chang2024} & 100.0\% & No & None & No \\
-Chinnababu et al.~\cite{Chinnababu2024} & 99.81\% & No & None & No \\
+Chinnababu et al.~\cite{Mehta2024} & 99.81\% & No & None & No \\
 Akbar et al.~\cite{Akbar2023} & 99.50\% & No & None & No \\
 Talari et al.~\cite{Talari2024} & 99.07\% & No & None & No \\
 Deepalakshmi et al.~\cite{Deepalakshmi2025} & 97.27\% & No & None & No \\
@@ -158,12 +158,71 @@ This study utilized the Pima Indians Diabetes Dataset (PIDD), a widely recognize
 
 \subsection{The CRISP-DM Helix Framework}
 
+\subsection{CRISP-DM Helix: Formal Definition}
+
+Formally, the CRISP-DM Helix can be defined as a 5-tuple:
+
+\begin{equation}
+\mathcal{H} = ( \mathcal{D}, \mathcal{P}, \mathcal{M}, \mathcal{V}, \mathcal{E} )
+\end{equation}
+
+where $\mathcal{D}$ is the dataset partitioned into $K$ stratified folds; $\mathcal{P} = \{p_1, p_2, \ldots, p_n\}$ is the set of preprocessing operations (imputation, scaling, resampling); $\mathcal{M}$ is the model class; $\mathcal{V}$ is the validation strategy (10-fold stratified CV); and $\mathcal{E}$ is the evaluation metric set (Recall, Precision, F1, AUC).
+
+The central constraint of $\mathcal{H}$ is the \textbf{Data Isolation Principle}:
+
+\begin{equation}
+\forall k \in [1,K]: \quad \theta_{p}^{(k)} = \text{fit}(\mathcal{P}, \mathcal{D}_{\text{train}}^{(k)}) \quad \text{and} \quad \mathcal{D}_{\text{val}}^{(k)} = \text{transform}(\mathcal{P}_{\theta_{p}^{(k)}}, \mathcal{D}_{\text{val}}^{(k)})
+\end{equation}
+
+where $\theta_{p}^{(k)}$ denotes the parameters learned from preprocessing operation $p$ on the training subset of fold $k$, and the validation subset $\mathcal{D}_{\text{val}}^{(k)}$ is transformed using only these within-fold parameters. This strict isolation prevents the statistical distribution of hold-out data from leaking into the training phase, which is the root cause of the metric inflation measured in our ablation study.
+
+
 To address the pervasive issue of statistical artifacts in existing literature, we introduce the \textbf{CRISP-DM Helix framework}~\cite{Kapoor2024Leakage}. This framework \cite{ProcessDriven}, built upon the PROBAST risk of bias assessment framework \cite{Moons2019PROBAST}, conceptualizes the machine learning lifecycle as a double-helix structure consisting of two intertwined strands:
 
 \begin{enumerate}[nosep]
     \item \textbf{Clinical Credibility Strand:} This strategic sequence shifts the optimization objective from misleading global accuracy to maximizing Recall and F1-Score, ensuring the model prioritizes the penalization of dangerous false negatives (missed diabetes diagnoses).
     \item \textbf{Engineering Execution Strand:} This operational sequence dictates the technical realization of the pipeline. It strictly mandates that all data transformations are rigorously encapsulated within isolated execution environments to guarantee absolute procedural integrity~\cite{Kapoor2024Leakage}.
 \end{enumerate}
+
+
+
+\begin{figure}[H]
+\centering
+\fbox{\begin{minipage}{0.95\columnwidth}
+\small
+\begin{verbatim}
+Algorithm 1: CRISP-DM Helix - Strict Data Isolation
+
+Input:  Dataset D, folds K
+Output: Mean metrics across K folds
+
+for fold = 1 to K:
+  D_train, D_val = stratified_split(D, fold)
+  
+  // Impute using ONLY train fold medians
+  medians = median(D_train[features where > 0])
+  D_train = impute_zeros(D_train, medians)
+  D_val   = impute_zeros(D_val, medians)
+  
+  // Scale using ONLY train fold params
+  scaler = StandardScaler().fit(D_train)
+  D_train = scaler.transform(D_train)
+  D_val   = scaler.transform(D_val)
+  
+  // SMOTE applied ONLY to training data
+  D_train = SMOTE().fit_resample(D_train.features, D_train.labels)
+  
+  // Train and evaluate
+  model = Ensemble(GBC, LDA, SVC).fit(D_train)
+  metrics = evaluate(model, D_val)
+  store(metrics)
+
+return mean(store), std(store)
+\end{verbatim}
+\end{minipage}}
+\caption{CRISP-DM Helix strict data isolation protocol ensuring zero leakage across all preprocessing stages.}
+\label{alg:helix}
+\end{figure}
 
 \subsection{Strict Data Preprocessing and Innovation}
 
@@ -280,7 +339,7 @@ Severe Leakage & Global Imputation + Scaling + SMOTE & 0.7338 & 0.7080 & 0.7643 
 % Placeholder: describe the SHAP analysis results
 \begin{minipage}{0.95\columnwidth}
 \centering
-\textbf{SHAP Feature Importance Summary}\\[0.3cm]
+\textbf{SHAP Global Feature Importance}
 \begin{tabular}{lc}
 \hline
 \textbf{Feature} & \textbf{Mean |SHAP|} \\
@@ -316,7 +375,7 @@ Our findings provide a critical re-evaluation of predictive modeling on the Pima
 
 \subsection{Comparison with Literature}
 
-\textbf{Backing:} The current PIDD literature is saturated with studies claiming near-perfect classification performance, including accuracies exceeding $95\%$, $99.81\%$, and even $100\%$~\cite{Chinnababu2024, Akbar2023, Chang2024, Deepalakshmi2025}. Our methodology directly challenges the validity of these claims, as validity of these claims, as 92\% of recently surveyed PIDD studies violate fundamental data isolation principles \cite{IllusionOfPerfection, Kapoor2024Leakage}rdinarily high metrics are statistical artifacts generated by data leakage, such as grouped median imputation and global oversampling~\cite{Wen2024Leakage}. To the best of our knowledge, our ablation study provides the first formal, quantitative measurement of this leakage-induced inflation, proving that the $+8.6\%$ F1-Score distortion is purely procedural rather than algorithmic~\cite{Wen2024Leakage}.
+\textbf{Backing:} The current PIDD literature is saturated with studies claiming near-perfect classification performance, including accuracies exceeding $95\%$, $99.81\%$, and even $100\%$~\cite{Mehta2024, Akbar2023, Chang2024, Deepalakshmi2025}. Our methodology directly challenges the validity of these claims, as validity of these claims, as 92\% of recently surveyed PIDD studies violate fundamental data isolation principles \cite{IllusionOfPerfection, Kapoor2024Leakage}rdinarily high metrics are statistical artifacts generated by data leakage, such as grouped median imputation and global oversampling~\cite{Wen2024Leakage}. To the best of our knowledge, our ablation study provides the first formal, quantitative measurement of this leakage-induced inflation, proving that the $+8.6\%$ F1-Score distortion is purely procedural rather than algorithmic~\cite{Wen2024Leakage}.
 
 \subsection{Clinical Implications}
 ROC analysis provides a comprehensive assessment of diagnostic model performance across all threshold values \cite{Mandrekar2010ROC}.
