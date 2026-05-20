@@ -4,23 +4,24 @@
 [![Paper](https://img.shields.io/badge/PDF-Paper-blue)](paper/paper.pdf)
 [![Kaggle](https://img.shields.io/badge/Kaggle-Code-20BEFF)](https://www.kaggle.com/code/yakeworld126/crisp-dm-pima)
 
-> **核心论点**：方法学严谨性（而非算法复杂度）才是临床机器学习可信度的真正决定因素。
+> **核心论点**：方法学严谨性（而非算法复杂度）才是临床机器学习可信度的真正决定因素。每个公开数据集应有校准过的性能上限——超过该上限的研究自动进入方法学审计。
 >
-> **Core Thesis**: Methodological rigor, not algorithmic complexity, is the true determinant of clinical ML trustworthiness.
+> **Core Thesis**: Methodological rigor, not algorithmic complexity, is the true determinant of clinical ML trustworthiness. Every public benchmark dataset should have a calibrated performance ceiling — studies exceeding it trigger automatic methodological audit.
 
 ---
 
 ## 📋 Overview
 
-The Pima Indians Diabetes Dataset (PIDD) literature suffers from a severe **"high-metric, low-credibility" paradox** — models claiming >95% accuracy universally fail in real-world deployment. This project provides the **first formal quantification** of how data leakage inflates reported metrics, and proposes the **CRISP-DM Helix framework** as a process-driven solution.
+The Pima Indians Diabetes Dataset (PIDD) literature suffers from a severe **"high-metric, low-credibility" paradox** — models claiming >95% accuracy universally fail in real-world deployment. This project provides quantitative measurement of how data leakage inflates reported metrics (+8.6% F1 inflation), and proposes the **CRISP-DM Helix framework** as a protocol-driven solution. A **Dataset Baseline Registry** is proposed to operationalize detection: the PIDD performance ceiling (F1=0.7541) serves as an audit trigger for future work.
 
 ### Key Discoveries
 
 | Discovery | Finding | Impact |
 |:----------|:--------|:-------|
 | **Recall Paradox** | Global SMOTE inflates F1 by +8.6% (0.6759→0.7338) but DECREASES Recall (0.7165→0.7080) | High-accuracy models miss MORE diabetic patients |
-| **Leakage Quantification** | First formal measurement of leakage-induced metric inflation | Establishes a reproducible benchmark |
-| **CRISP-DM Helix** | Dual-strand framework: Clinical Credibility + Engineering Execution | New standard for clinical ML reproducibility |
+| **Leakage Quantification** | Quantitative measurement of leakage-induced metric inflation | Establishes a reproducible benchmark |
+| **CRISP-DM Helix** | Dual-strand framework: Clinical Credibility + Engineering Execution | Standard for clinical ML reproducibility |
+| **Dataset Baseline Registry** | Verified performance ceiling as automatic audit trigger | Any study exceeding F1=0.7541 on PIDD requires audit |
 
 ### True Performance (Leakage-Free)
 

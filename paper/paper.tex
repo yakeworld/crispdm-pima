@@ -28,11 +28,11 @@
 \address[2]{School of Medicine, Shanghai University, Shanghai, China}
 
 \begin{abstract}
-Existing clinical ML guidelines universally warn against data leakage but provide no auditable implementation protocol. We introduce the CRISP-DM Helix---a formalized data isolation protocol---and demonstrate that protocol violation inflates F1-Score by +8.6% while decreasing clinical Recall. The Pima Indians Diabetes Dataset (PIDD) is a cornerstone benchmark where current literature suffers from a severe ``high-metric, low-credibility'' paradox, where models claiming $>95\%$ accuracy universally fail in real-world deployment due to pervasive methodological flaws. To address this crisis, we propose the CRISP-DM Helix framework, a novel methodology that enforces absolute data isolation by encapsulating all data preprocessing, zero-value median imputation, and Synthetic Minority Over-sampling Technique (SMOTE) applications strictly within cross-validation training folds. Our fully cross-validated ablation study provides quantitative measurement of metric inflation caused by data leakage, revealing a critical ``Recall Paradox''. Specifically, introducing severe data leakage via global preprocessing artificially inflates the F1-Score by $+8.6\%$ (from $0.6759$ to $0.7338$), while paradoxically decreasing the clinical Recall for the diabetic minority class from $0.7165$ to $0.7080$, demonstrating that such ``high accuracy'' models actually miss more diabetic patients. Evaluated under our strict, leakage-free isolation protocol, an optimized soft-voting ensemble comprising Gradient Boosting, Linear Discriminant Analysis, and Support Vector Classifiers achieved an authentic F1-Score of $0.7541$ and a Recall of $0.7500$. The CRISP-DM Helix, defined as a formal 5-tuple with algorithmic implementation (Algorithm 1), is aligned with PROBAST and TRIPOD standards and provides a reusable template for any clinical ML study. By transforming the abstract principle of "avoid data leakage" into a concrete, auditable protocol, this framework establishes a new benchmark for reproducible clinical ML research. \cite{Luo2016TRIPOD, Wiens2019MLClin, Tejani2024CLAIM}.
+Existing clinical ML guidelines universally warn against data leakage but provide no auditable implementation protocol. We introduce the CRISP-DM Helix---a formalized data isolation protocol---and demonstrate that protocol violation inflates F1-Score by +8.6\% while decreasing clinical Recall. The Pima Indians Diabetes Dataset (PIDD) is a cornerstone benchmark where current literature suffers from a severe ``high-metric, low-credibility'' paradox, with models claiming $>95\%$ accuracy universally failing in real-world deployment due to pervasive methodological flaws. To address this crisis, we propose the CRISP-DM Helix framework, a methodology that enforces absolute data isolation by encapsulating all preprocessing, imputation, and SMOTE applications strictly within cross-validation training folds. Our fully cross-validated ablation study provides quantitative measurement of metric inflation caused by data leakage, revealing a critical ``Recall Paradox''---severe leakage inflates F1-Score by +8.6\% (from 0.6759 to 0.7338) while paradoxically decreasing Recall for the diabetic minority class (from 0.7165 to 0.7080). Under strict isolation, an optimized soft-voting ensemble achieved an authentic F1-Score of 0.7541 and Recall of 0.7500. The CRISP-DM Helix is aligned with PROBAST and TRIPOD standards and provides a reusable template for any clinical ML study. Beyond the protocol itself, we propose a Dataset Baseline Registry: for each public benchmark, a verified performance ceiling under strict isolation serves as an automatic audit trigger---any study exceeding the ceiling should undergo mandatory methodological review. This framework establishes a verifiable performance baseline for the PIDD benchmark (F1=0.7541, Acc=0.7746) and operationalizes the detection of leakage-ridden studies across the literature.
 \end{abstract}
 
 \begin{keyword}
-CRISP-DM \sep data leakage \sep diabetes prediction \sep process-driven credibility \sep machine learning reproducibility \sep SHAP
+CRISP-DM \sep data leakage \sep diabetes prediction \sep process-driven credibility \sep machine learning reproducibility \sep benchmark baseline registry
 \end{keyword}
 
 \end{frontmatter}
@@ -40,49 +40,41 @@ CRISP-DM \sep data leakage \sep diabetes prediction \sep process-driven credibil
 \begin{figure*}[t]
 \centering
 \begin{tikzpicture}[node distance=0.8cm, auto]
-% Use positioning library
 \usetikzlibrary{positioning, shapes.geometric, arrows}
 
-% Define styles
 \tikzstyle{box} = [rectangle, rounded corners, minimum width=3cm, minimum height=0.8cm, text centered, draw=black, fill=blue!10]
 \tikzstyle{arrow} = [thick,->,>=stealth]
 
-% Title
 \node[text width=14cm] at (5.5, 7.5) {\textbf{Figure 1: CRISP-DM Helix Framework Architecture}};
 
-% Left strand - Clinical Credibility
 \node[box, fill=green!10] (clinical) at (1.5,6.5) {Clinical Credibility Strand};
 \node[box, below of=clinical, yshift=-0.3cm] (c1) {Objective: Maximize Recall};
 \node[box, below of=c1] (c2) {Minimize False Negatives};
 \node[box, below of=c2] (c3) {SHAP on Clean Pipeline};
 \node[box, below of=c3] (c4) {Clinical Trustworthiness};
 
-% Right strand - Engineering Execution
 \node[box, fill=orange!10] (eng) at (8.5,6.5) {Engineering Execution Strand};
 \node[box, below of=eng, yshift=-0.3cm] (e1) {CV-Fold Isolation};
 \node[box, below of=e1] (e2) {Within-Fold Fit};
 \node[box, below of=e2] (e3) {No Global Preprocessing};
 \node[box, below of=e3] (e4) {Reproducible Pipelines};
 
-% Center - CRISP-DM Helix Core
-\node[rectangle, rounded corners, minimum width=6cm, minimum height=1.2cm, text centered, draw=black, fill=purple!10, line width=1.5pt] (core) at (5, 3.8) {\textbf{CRISP-DM Helix Core}\\\textit{Data Isolation Protocol}};
+\node[rectangle, rounded corners, minimum width=6cm, minimum height=1.2cm, text width=5.8cm, align=center, draw=black, fill=purple!10, line width=1.5pt] (core) at (5, 3.8) {\textbf{CRISP-DM Helix Core}\\\textit{Data Isolation Protocol}};
 
-% Arrows from outer strands to core
 \draw[arrow] (c4.south) -- (core.north west);
 \draw[arrow] (e4.south) -- (core.north east);
 
-% Output
-\node[box, fill=green!20, below of=core, yshift=-0.5cm, minimum width=6cm] (output) {Output: Honest Performance Benchmark\\F1=0.7541, Recall=0.7500, Acc=0.7746};
-
+\node[box, below of=core, yshift=-0.5cm, minimum width=6cm, text width=5.8cm, align=center, fill=green!20] (output) {Output: Honest Performance Benchmark\\F1=0.7541, Recall=0.7500, Acc=0.7746};
 \draw[arrow] (core.south) -- (output.north);
 
-% Ablation levels
-\node[box, fill=yellow!10, below of=output, yshift=-0.5cm, minimum width=6cm] (ablation) {\textbf{Ablation Study:} 4 Leakage Levels\\No Leakage $\rightarrow$ Severe Leakage (+8.6\% F1)};
-
+\node[box, below of=output, yshift=-0.5cm, minimum width=6cm, text width=5.8cm, align=center, fill=yellow!10] (ablation) {\textbf{Ablation Study:} 4 Leakage Levels\\No Leakage $\rightarrow$ Severe Leakage (+8.6\% F1)};
 \draw[arrow] (output.south) -- (ablation.north);
 
+\node[box, below of=ablation, yshift=-0.5cm, minimum width=6cm, text width=5.8cm, align=center, fill=red!10] (registry) {\textbf{Dataset Baseline Registry}\\Verified Performance Ceiling $\rightarrow$ Audit Trigger};
+\draw[arrow, dashed] (ablation.south) -- (registry.north);
+
 \end{tikzpicture}
-\caption{The CRISP-DM Helix framework architecture, showing the dual-strand structure. The Clinical Credibility Strand (left) focuses on clinically meaningful metrics, while the Engineering Execution Strand (right) enforces strict data isolation. The core protocol ensures all preprocessing operations are encapsulated within cross-validation training folds.}
+\caption{The CRISP-DM Helix framework architecture, showing the dual-strand structure. The Clinical Credibility Strand (left) focuses on clinically meaningful metrics, while the Engineering Execution Strand (right) enforces strict data isolation. The Dataset Baseline Registry (bottom) operationalizes the performance ceiling as an automatic audit trigger for future work.}
 \label{fig:helix}
 \end{figure*}
 
@@ -103,23 +95,23 @@ Despite the widespread utilization of the PIDD, the current literature exhibits 
 
 \textbf{First}, the dataset suffers from the improper handling of ``biologically implausible'' zero values~\cite{KaggleZeroValues}. Key physiological indicators in the PIDD, such as Insulin (which has a 48.7\% missing rate), Skin Thickness, Blood Pressure, Glucose, and BMI, contain massive zero values that represent missing clinical records, yet these are frequently treated mechanically as valid numerical features~\cite{Kapoor2024Leakage}.
 
-\textbf{Second}, and most critically, catastrophic data leakage is rampant~\cite{Wen2024Leakage}. The vast majority of high-accuracy studies apply missing value imputation or Synthetic Minority Over-sampling Technique (SMOTE) to the entire global dataset prior to cross-validation or train-test splitting~\cite{Wen2024Leakage}. This global preprocessing leaks the statistical distribution of the test set into the training phase, hopelessly contaminating the model's evaluation.
+\textbf{Second}, and most critically, catastrophic data leakage is rampant~\cite{Wen2024Leakage}. The vast majority of high-accuracy studies apply missing value imputation or SMOTE to the entire global dataset prior to cross-validation or train-test splitting~\cite{Wen2024Leakage}. This global preprocessing leaks the statistical distribution of the test set into the training phase, contaminating the model's evaluation.
 
 \textbf{Third}, models fall into the ``accuracy trap'' driven by class imbalance~\cite{Sali2025, Amri2025}. The PIDD exhibits a 65:35 imbalance favoring non-diabetic cases~\cite{Kapoor2024Leakage}. Optimizing solely for global accuracy leads algorithms to sacrifice sensitivity for the diabetic minority class, resulting in high rates of false negatives---a clinically unacceptable outcome where missed diagnoses carry far greater medical costs than false alarms~\cite{Sali2025}.
 
 \subsection{Gap Statement (Move 2b)}
 
-While the current literature for Pima diabetes prediction is characterized by complex models claiming exceptionally high accuracies ($>95\%$), and existing reporting guidelines (TRIPOD, PROBAST, MI-CLAIM) all mandate the prevention of data leakage, a critical implementation gap persists: none provide a standardized, auditable protocol for achieving data isolation. Furthermore, the quantitative magnitude of leakage-induced metric distortion---the cost of protocol violation---remains unmeasured.~\cite{Kapoor2024Leakage}.
+While the current literature for Pima diabetes prediction is characterized by complex models claiming exceptionally high accuracies ($>95\%$), and existing reporting guidelines (TRIPOD, PROBAST, MI-CLAIM) all mandate the prevention of data leakage, two critical implementation gaps persist: (1) none provide a standardized, auditable protocol for achieving data isolation, and (2) none establish dataset-specific performance baselines that could serve as automatic detection mechanisms for leakage-ridden studies. The quantitative magnitude of leakage-induced metric distortion---the cost of protocol violation---remains unmeasured~\cite{Kapoor2024Leakage}.
 
 \subsection{Occupying the Niche (Move 3 --- Our Contributions)}
 
-To address this critical research gap, we propose the CRISP-DM Helix, a novel methodological framework that enforces strict data isolation by encapsulating all preprocessing, imputation, and resampling steps entirely within the training folds of the cross-validation loop. This paper establishes ``Process-Driven Credibility'' as the new paradigm for clinical ML reproducibility. Our specific contributions are fivefold:
+To address this critical research gap, we propose the CRISP-DM Helix, a methodological framework that enforces strict data isolation by encapsulating all preprocessing, imputation, and resampling steps entirely within the training folds of the cross-validation loop. This paper establishes ``Process-Driven Credibility'' as a paradigm for clinical ML reproducibility. Our specific contributions are fivefold:
 
 \begin{enumerate}[nosep]
     \item We introduce the \textbf{CRISP-DM Helix}: a formalized, auditable data isolation protocol, defined as a 5-tuple with algorithmic implementation (Algorithm~1), aligned with PROBAST risk domains.
     \item We provide \textbf{quantitative measurement of protocol violation effects}, showing that failure to implement the Helix inflates F1-Score by $+8.6\%$ while decreasing clinical Recall.
     \item We define and validate the \textbf{Recall Paradox} as a diagnostic signature for protocol violations in clinical ML pipelines.
-    \item We establish \textbf{honest performance bounds} for the PIDD under strict Helix isolation (F1=0.7541, Acc=0.7746) through a benchmark of 34 models.
+    \item We establish \textbf{honest performance bounds} for the PIDD under strict Helix isolation (F1=0.7541, Acc=0.7746) through a benchmark of 34 models, and propose this baseline as a \textbf{Dataset Baseline Registry}---a community-maintained performance ceiling that serves as an automatic audit trigger.
     \item We provide a \textbf{fully transparent, open-source implementation} as a reusable template, closing the gap between guideline awareness and implementation practice.
 \end{enumerate}
 
@@ -139,7 +131,7 @@ Chinnababu et al.~\cite{Mehta2024} & 99.81\% & No & None & No \\
 Akbar et al.~\cite{Akbar2023} & 99.50\% & No & None & No \\
 Talari et al.~\cite{Talari2024} & 99.07\% & No & None & No \\
 Deepalakshmi et al.~\cite{Deepalakshmi2025} & 97.27\% & No & None & No \\
-\midrule
+\cmidrule{1-5}
 \textbf{Ours (CRISP-DM Helix)} & \textbf{77.46\%} & \textbf{Yes (Strict CV Isolation)} & \textbf{CRISP-DM Helix} & \textbf{Yes (SHAP)} \\
 \bottomrule
 \end{tabular}%
@@ -176,15 +168,12 @@ The central constraint of $\mathcal{H}$ is the \textbf{Data Isolation Principle}
 
 where $\theta_{p}^{(k)}$ denotes the parameters learned from preprocessing operation $p$ on the training subset of fold $k$, and the validation subset $\mathcal{D}_{\text{val}}^{(k)}$ is transformed using only these within-fold parameters. This strict isolation prevents the statistical distribution of hold-out data from leaking into the training phase, which is the root cause of the metric inflation measured in our ablation study.
 
-
-To address the pervasive issue of statistical artifacts in existing literature, we introduce the \textbf{CRISP-DM Helix framework}~\cite{Kapoor2024Leakage}. This framework \cite{ProcessDriven}, built upon the PROBAST risk of bias assessment framework \cite{Moons2019PROBAST}, conceptualizes the machine learning lifecycle as a double-helix structure consisting of two intertwined strands:
+To address the pervasive issue of statistical artifacts in existing literature, we introduce the \textbf{CRISP-DM Helix framework}~\cite{Kapoor2024Leakage}. This framework, built upon the PROBAST risk of bias assessment framework~\cite{Moons2019PROBAST}, conceptualizes the machine learning lifecycle as a double-helix structure consisting of two intertwined strands:
 
 \begin{enumerate}[nosep]
     \item \textbf{Clinical Credibility Strand:} This strategic sequence shifts the optimization objective from misleading global accuracy to maximizing Recall and F1-Score, ensuring the model prioritizes the penalization of dangerous false negatives (missed diabetes diagnoses).
     \item \textbf{Engineering Execution Strand:} This operational sequence dictates the technical realization of the pipeline. It strictly mandates that all data transformations are rigorously encapsulated within isolated execution environments to guarantee absolute procedural integrity~\cite{Kapoor2024Leakage}.
 \end{enumerate}
-
-
 
 \begin{figure}[H]
 \centering
@@ -224,25 +213,25 @@ return mean(store), std(store)
 \label{alg:helix}
 \end{figure}
 
-\subsection{Strict Data Preprocessing and Innovation}
+\subsection{Strict Data Preprocessing and Imputation}
 
-A critical flaw in numerous existing studies is the ``global'' application of preprocessing steps prior to data splitting, which inadvertently leaks validation data distribution into the training phase~\cite{Kapoor2024Leakage}. The core methodological innovation of our CRISP-DM Helix framework, inspired by established clinical ML guidelines \cite{Collins2015TRIPOD, Norgeot2020MI-CLAIM}, is that \textbf{all preprocessing operations---including missing value imputation, feature scaling, and synthetic oversampling---are exclusively `fit' inside the training subset of each cross-validation fold}.
+A critical flaw in numerous existing studies is the ``global'' application of preprocessing steps prior to data splitting, which inadvertently leaks validation data distribution into the training phase~\cite{Kapoor2024Leakage}. The core methodological innovation of our CRISP-DM Helix framework, inspired by established clinical ML guidelines~\cite{Collins2015TRIPOD, Norgeot2020MI-CLAIM}, is that \textbf{all preprocessing operations---including missing value imputation, feature scaling, and synthetic oversampling---are exclusively `fit' inside the training subset of each cross-validation fold}.
 
-Exploratory data analysis identified biologically implausible zero-values across five features: Glucose, Blood Pressure, Skin Thickness, Insulin (48.7\% missing), and BMI. These invalid zeros were systematically re-flagged as Not-a-Number (NaN)~\cite{Kapoor2024Leakage}. A class-conditional median imputation strategy \cite{Stekhoven2012missForest, Stiglic2012Missing} was then applied to restore authentic medical distributions. Crucially, the imputation median and the \texttt{StandardScaler} parameters were calculated strictly on the training fold and subsequently applied to transform both the training and the hold-out validation folds~\cite{Kapoor2024Leakage}.
+Exploratory data analysis identified biologically implausible zero-values across five features: Glucose, Blood Pressure, Skin Thickness, Insulin (48.7\% missing), and BMI. These invalid zeros were systematically re-flagged as Not-a-Number (NaN)~\cite{Kapoor2024Leakage}. A class-conditional median imputation strategy~\cite{Stekhoven2012missForest, Stiglic2012Missing} was then applied to restore authentic medical distributions. Crucially, the imputation median and the \texttt{StandardScaler} parameters were calculated strictly on the training fold and subsequently applied to transform both the training and the hold-out validation folds~\cite{Kapoor2024Leakage}.
 
 \subsection{Isolated SMOTE Protocol for Class Imbalance}
 
-To mitigate the 65:35 class imbalance, we applied the Synthetic Minority Over-sampling Technique (SMOTE). Adhering to our strict isolation protocol, SMOTE \cite{Batista2004SMOTE, Blagus2013SMOTE} was instantiated exclusively on the training data within the cross-validation loop. This ensures that synthetic minority instances are generated without any exposure to the testing subset, entirely neutralizing the risk of target leakage that plagues global SMOTE applications~\cite{Kapoor2024Leakage}.
+To mitigate the 65:35 class imbalance, we applied the Synthetic Minority Over-sampling Technique (SMOTE). Adhering to our strict isolation protocol, SMOTE~\cite{Batista2004SMOTE, Blagus2013SMOTE} was instantiated exclusively on the training data within the cross-validation loop. This ensures that synthetic minority instances are generated without any exposure to the testing subset, entirely neutralizing the risk of target leakage that plagues global SMOTE applications~\cite{Kapoor2024Leakage}.
 
 \subsection{Model Portfolio and Ensemble Strategy}
 
-We evaluated a comprehensive benchmark of 34 baseline models from the \texttt{scikit-learn} ecosystem, alongside advanced gradient boosting frameworks including XGBoost, LightGBM, and CatBoost~\cite{Kapoor2024Leakage}. Following an exhaustive search, three complementary base learners were selected to construct a robust heterogeneous soft-voting ensemble: Gradient Boosting Classifier (GBC), Linear Discriminant Analysis (LDA), and Support Vector Classifier (SVC). The soft-voting mechanism aggregates the predicted probability arrays from each base estimator to finalize the optimal decision boundary.
+We evaluated a comprehensive benchmark of 34 baseline models from the \texttt{scikit-learn} ecosystem, alongside advanced gradient boosting frameworks including XGBoost, LightGBM, and CatBoost~\cite{Kapoor2024Leakage}. Following an exhaustive search, three complementary base learners were selected to construct a heterogeneous soft-voting ensemble: Gradient Boosting Classifier (GBC), Linear Discriminant Analysis (LDA), and Support Vector Classifier (SVC). The soft-voting mechanism aggregates the predicted probability arrays from each base estimator to finalize the optimal decision boundary.
 
 \subsection{Cross-Validation and Ablation Study Design}
 
 All models were primarily evaluated using a 10-fold Stratified Cross-Validation (CV) scheme to preserve the intrinsic class distribution. To quantitatively dissect the phenomenon of metric inflation caused by data leakage, we designed an ablation study with four levels of progressive procedural contamination~\cite{Kapoor2024Leakage}:
 
-\begin{itemize}[nosep]
+\begin{itemize}
     \item \textbf{No Leakage (Ours):} Strictly isolated median imputation, scaling, and SMOTE within CV folds.
     \item \textbf{Minor Leakage:} Global imputation applied prior to CV splitting.
     \item \textbf{Medium Leakage:} Global imputation and global scaling applied prior to CV splitting.
@@ -253,13 +242,13 @@ To rigorously confirm that the performance inflation observed in the leakage sce
 
 \subsection{SHAP Explainability and Interaction Effects}
 
-To unpack the ``black-box'' mechanics of our optimal ensemble, we applied SHapley Additive exPlanations (SHAP) \cite{Lundberg2017SHAP}. We configured \texttt{TreeExplainer} for the GBC module and \texttt{KernelExplainer} for the LDA/SVC modules. In order to capture not only main feature effects but also the synergistic relationships between physiological indicators (such as Glucose and BMI), we leverage the SHAP interaction effect model~\cite{Kapoor2024Leakage}. The formal equation computing the exact SHAP interaction value $\Phi_{i,j}$ for features $i$ and $j$ is defined as:
+To unpack the ``black-box'' mechanics of our optimal ensemble, we applied SHapley Additive exPlanations (SHAP)~\cite{Lundberg2017SHAP}. We configured \texttt{TreeExplainer} for the GBC module and \texttt{KernelExplainer} for the LDA/SVC modules. In order to capture not only main feature effects but also the synergistic relationships between physiological indicators (such as Glucose and BMI), we leverage the SHAP interaction effect model~\cite{Kapoor2024Leakage}. The formal equation computing the exact SHAP interaction value $\Phi_{i,j}$ for features $i$ and $j$ is defined as:
 
 \begin{equation}
 \Phi_{i,j} = \sum_{S \subseteq \mathcal{M} \setminus \{i,j\}} \frac{|S|! (M - |S| - 2)!}{2(M - 1)!} \Big( f_x(S \cup \{i,j\}) - f_x(S \cup \{i\}) - f_x(S \cup \{j\}) + f_x(S) \Big)
 \end{equation}
 
-where $\mathcal{M}$ is the set of all $M$ clinical features, $S$ denotes a feature subset excluding features $i$ and $j$, and $f_x(S)$ is the model's predictive output for instance $x$ given the active feature subset $S$. This interaction calculation guarantees mathematically consistent pathophysiological insights.
+where $\mathcal{M}$ is the set of all $M$ clinical features, $S$ denotes a feature subset excluding features $i$ and $j$, and $f_x(S)$ is the model's predictive output for instance $x$ given the active feature subset $S$.
 
 % =========================================================================
 % RESULTS
@@ -289,8 +278,7 @@ LinearDiscriminantAnalysis & 0.8370 \\
 \label{fig:roc}
 \end{figure}
 
-
-A total of 34 machine learning models were evaluated using a 10-fold stratified cross-validation framework~\cite{Kapoor2024Leakage}. Table~\ref{tab:top5_baseline} presents the performance metrics of the top 5 baseline models, ranked by F1-Score~\cite{Kapoor2024Leakage}. Furthermore, a soft-voting ensemble model combining Gradient Boosting, Linear Discriminant Analysis, and Support Vector Classifier was evaluated under the same strict data isolation protocol~\cite{Kapoor2024Leakage}. This optimal ensemble achieved an F1-Score of 0.7541, an Accuracy of 0.7746 \cite{ProcessDriven}, a Precision of 0.6625, a Recall of 0.7500, and an AUC of 0.8481~\cite{Kapoor2024Leakage}.
+A total of 34 machine learning models were evaluated using a 10-fold stratified cross-validation framework~\cite{Kapoor2024Leakage}. Table~\ref{tab:top5_baseline} presents the performance metrics of the top 5 baseline models, ranked by F1-Score~\cite{Kapoor2024Leakage}. Furthermore, a soft-voting ensemble model combining Gradient Boosting, Linear Discriminant Analysis, and Support Vector Classifier was evaluated under the same strict data isolation protocol~\cite{Kapoor2024Leakage}. This optimal ensemble achieved an F1-Score of 0.7541, an Accuracy of 0.7746~\cite{ProcessDriven}, a Precision of 0.6625, a Recall of 0.7500, and an AUC of 0.8481~\cite{Kapoor2024Leakage}.
 
 \begin{table}
 \centering
@@ -335,8 +323,6 @@ Severe Leakage & Global Imputation + Scaling + SMOTE & 0.7338 & 0.7080 & 0.7643 
 
 \begin{figure}[t]
 \centering
-% SHAP beeswarm plot would be generated from the ensemble model
-% Placeholder: describe the SHAP analysis results
 \begin{minipage}{0.95\columnwidth}
 \centering
 \textbf{SHAP Global Feature Importance}
@@ -353,7 +339,6 @@ Age & $\approx 0.05$ \\
 \caption{SHAP analysis results from the CRISP-DM Helix ensemble. Glucose concentration dominates prediction, followed by BMI and Age. Values are from strict data isolation protocol.}
 \label{fig:shap}
 \end{figure}
-
 
 SHAP analysis was conducted on the optimal ensemble model to compute the marginal contribution of each feature to the predictions~\cite{Kapoor2024Leakage}. The global feature importance ranking identified the top three predictors driving the model's outputs~\cite{Kapoor2024Leakage}. The mean absolute SHAP values for these top three features are: Glucose ($\approx 0.16$), BMI ($\approx 0.09$), and Age ($\approx 0.05$)~\cite{Kapoor2024Leakage}.
 
@@ -375,19 +360,35 @@ Our findings provide a critical re-evaluation of predictive modeling on the Pima
 
 \subsection{Comparison with Literature}
 
-\textbf{Backing:} The current PIDD literature is saturated with studies claiming near-perfect classification performance, including accuracies exceeding $95\%$, $99.81\%$, and even $100\%$~\cite{Mehta2024, Akbar2023, Chang2024, Deepalakshmi2025}. Our methodology directly challenges the validity of these claims, as validity of these claims, as 92\% of recently surveyed PIDD studies violate fundamental data isolation principles \cite{IllusionOfPerfection, Kapoor2024Leakage}rdinarily high metrics are statistical artifacts generated by data leakage, such as grouped median imputation and global oversampling~\cite{Wen2024Leakage}. To the best of our knowledge, our ablation study provides formal, quantitative measurement of this leakage-induced inflation, proving that the $+8.6\%$ F1-Score distortion is purely procedural rather than algorithmic~\cite{Wen2024Leakage}.
+\textbf{Backing:} The current PIDD literature is saturated with studies claiming near-perfect classification performance, including accuracies exceeding $95\%$, $99.81\%$, and even $100\%$~\cite{Mehta2024, Akbar2023, Chang2024, Deepalakshmi2025}. Our methodology directly challenges the validity of these claims. Our ablation study provides quantitative measurement of this leakage-induced inflation, demonstrating that the $+8.6\%$ F1-Score distortion is purely procedural rather than algorithmic~\cite{Wen2024Leakage}. As 92\% of recently surveyed PIDD studies violate fundamental data isolation principles~\cite{IllusionOfPerfection, Kapoor2024Leakage}, these extraordinarily high metrics are statistical artifacts generated by data leakage.
 
-\subsection{Clinical Implications}
-ROC analysis provides a comprehensive assessment of diagnostic model performance across all threshold values \cite{Mandrekar2010ROC}.
+\subsection{Clinical Implications and the Baseline Registry}
 
-\textbf{Qualifier:} In the context of diabetes screening, a diagnostic model that achieves $95\%$ global accuracy but misses $30\%$ of actual diabetic patients (false negatives) is clinically dangerous~\cite{Sali2025, Amri2025}. In medical settings, the consequences of a missed diagnosis far exceed those of a misdiagnosis, making high recall a clinical imperative~\cite{Amri2025, Sali2025}. Therefore, process integrity, explicitly enforced via the CRISP-DM Helix framework to isolate preprocessing within cross-validation folds, should serve as the new gold standard for clinical ML reproducibility~\cite{Wen2024Leakage}.
+\textbf{Qualifier:} In the context of diabetes screening, a diagnostic model that achieves $95\%$ global accuracy but misses $30\%$ of actual diabetic patients (false negatives) is clinically dangerous~\cite{Sali2025, Amri2025}. In medical settings, the consequences of a missed diagnosis far exceed those of a misdiagnosis, making high recall a clinical imperative~\cite{Amri2025, Sali2025}. Process integrity, enforced via the CRISP-DM Helix framework to isolate preprocessing within cross-validation folds, should serve as a standard for clinical ML reproducibility~\cite{Wen2024Leakage}.
+
+Beyond the protocol itself, we propose that every public benchmark dataset in clinical ML should establish a \textbf{Dataset Baseline Registry}: a verified performance ceiling under a strict, leakage-free protocol. This registry would serve complementary functions.
+
+First, it provides an \textbf{audit trigger}: any study reporting performance metrics substantially exceeding the baseline---for example, an F1-Score above 0.85 on the PIDD---automatically flags for rigorous methodological audit. Second, a registry of per-dataset baselines enables systematic detection of protocol violations across the literature, transforming ``everyone knows data leakage is bad'' from an abstract principle into an operational detection mechanism.
+
+\textbf{The PIDD Baseline.} Our CRISP-DM Helix isolation protocol establishes a verified, fully transparent performance ceiling for the PIDD: an F1-Score of 0.7541 and Accuracy of 0.7746 under 34-model 10-fold stratified cross-validation. Any metric reported above this ceiling---particularly the ubiquitous claims of $>95\%$ or $>99\%$ accuracy in current literature---should be regarded as statistical artifacts of data leakage until proven otherwise via an auditable pipeline.
+
+\textbf{Proposed Registry Architecture.} A community-maintained baseline registry could be organized as follows:
+
+\begin{enumerate}[nosep]
+    \item \textbf{Calibration}: For each dataset, the registry publishes a verified performance bound derived from a standardized, auditable pipeline.
+    \item \textbf{Threshold}: A dataset-specific threshold calibrated so that metrics above it have a high probability ($p > 0.95$) of arising from methodological violations rather than algorithmic innovation.
+    \item \textbf{Audit Protocol}: Any submission reporting metrics above the threshold must provide a completed PROBAST compliance checklist or equivalent methodological audit as a condition of peer review.
+    \item \textbf{Community Governance}: The registry is version-controlled and maintained by a broad coalition of clinical ML researchers, analogous to PapersWithCode---but with methodological rigor as the primary filter.
+\end{enumerate}
+
+This registry architecture closes the loop that existing reporting guidelines leave open: TRIPOD, PROBAST, and MI-CLAIM all mandate ``prevent data leakage''~\cite{Collins2015TRIPOD, Moons2019PROBAST, Norgeot2020MI-CLAIM}, but none provide a dataset-specific threshold for detecting when leakage has \textit{actually} occurred. The baseline registry operationalizes this detection. Future work should extend this approach to other widely-used clinical ML benchmarks (e.g., MIMIC-III~\cite{Johnson2016MIMIC}, NHANES, Wisconsin Breast Cancer) and evaluate the sensitivity and specificity of different threshold metrics, guided by the reproducibility principles outlined in recent work~\cite{McDermott2021Reproducibility, Vollmer2020Machine}.
 
 \subsection{Limitations}
 
 \textbf{Rebuttal:} Despite the robust pipeline architecture, this study acknowledges several methodological and technical limitations that warrant further investigation:
 
 \begin{enumerate}[nosep]
-    \item \textbf{Dataset Scale and Homogeneity:} The PIDD contains only 768 samples from a single, ethnically homogenous population (female Pima Indians)~\cite{KagglePIDD, Smith1988}. This small size and lack of demographic diversity inherently limit the global generalizability of the trained models \cite{Riley2020SampleSize}~\cite{KagglePIDD}.
+    \item \textbf{Dataset Scale and Homogeneity:} The PIDD contains only 768 samples from a single, ethnically homogenous population (female Pima Indians)~\cite{KagglePIDD, Smith1988}. This small size and lack of demographic diversity inherently limit the global generalizability of the trained models~\cite{Riley2020SampleSize}.
     \item \textbf{Lack of External Validation:} The current study does not evaluate the framework on a distinct, external validation dataset~\cite{Kapoor2024Leakage}. Future work must test the model's resilience to dataset shift across different clinical environments~\cite{Wen2024Leakage}.
     \item \textbf{Approximations in XAI:} The feature importance weights derived from the SHAP analysis are based on visual approximations ($\approx$) from beeswarm plots rather than exact, computationally extracted numerical arrays for the heterogeneous soft voting ensemble~\cite{Kapoor2024Leakage}.
     \item \textbf{Unconventional Statistical Testing Design:} The $5 \times 2$ CV paired t-test is conventionally designed to compare the performance of two different algorithms on the same dataset~\cite{Dietterich1998}. In this study, we adapted it to compare different preprocessing pipelines (leakage vs. no-leakage) for the same algorithm, which represents an unconventional application.
@@ -399,7 +400,11 @@ ROC analysis provides a comprehensive assessment of diagnostic model performance
 
 \section{Conclusion}
 
-The CRISP-DM Helix framework addresses a critical gap in clinical ML research: while guidelines universally warn against data leakage, none provide a standardized implementation protocol. By offering a formal, auditable, and algorithmically complete protocol for data isolation---aligned with PROBAST, TRIPOD, and MI-CLAIM standards---the Helix framework transforms ``best practice'' from an aspirational principle into a verifiable pipeline component. Our ablation study quantifies the cost of protocol violation at $+8.6\%$ F1 inflation ($p < 0.05$), providing an empirical benchmark for evaluating pipeline integrity. The CRISP-DM Helix is available as an open-source template that any clinical ML study can adopt. Future work should extend the framework to federated learning environments, real-time decision support systems, and multi-center external validation across diverse populations.
+The CRISP-DM Helix framework addresses a critical gap in clinical ML research: while guidelines universally warn against data leakage, none provide a standardized implementation protocol or a dataset-specific baseline for detecting when violations have occurred. By offering a formal, auditable, and algorithmically complete protocol for data isolation---aligned with PROBAST, TRIPOD, and MI-CLAIM standards---the Helix framework transforms ``best practice'' from an aspirational principle into a verifiable pipeline component. Our ablation study quantifies the cost of protocol violation at $+8.6\%$ F1 inflation ($p < 0.05$), providing an empirical benchmark for evaluating pipeline integrity.
+
+Beyond the protocol itself, we propose a \textbf{Dataset Baseline Registry} as a community mechanism for detecting leakage-ridden studies. The PIDD performance ceiling (F1=0.7541, Acc=0.7746) established here serves as the first entry in such a registry. Any study exceeding this ceiling should undergo mandatory methodological audit---closing the gap between ``leakage awareness'' and ``leakage detection.''
+
+The CRISP-DM Helix is available as an open-source template that any clinical ML study can adopt. Future work should extend the framework to federated learning environments, real-time decision support systems, and multi-center external validation across diverse populations, as well as populate the Dataset Baseline Registry with calibrated baselines across additional clinical ML benchmarks.
 
 \section*{Acknowledgments}
 The authors thank the National Institute of Diabetes and Digestive and Kidney Diseases for making the Pima Indian Diabetes Dataset publicly available.
