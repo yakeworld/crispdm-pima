@@ -1,0 +1,64 @@
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.spl
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+*.nlo
+*.nls
+*.ilg
+*.ind
+*.idx
+*.glo
+*.gls
+*.glg
+*.ist
+*.dvi
+*.ps
+*.synctex
+*.run.xml
+*.bcf
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Environment
+.env
+.venv
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kaggle datasets (download locally, not in repo)
+kaggle/
+data/
+*.csv
+
+# Large files
+*.pkl
+*.h5
+*.joblib
+checkpoints/
